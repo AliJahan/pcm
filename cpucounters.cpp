@@ -509,10 +509,12 @@ bool PCM::detectModel()
 
     pcm_cpuid(7, 0, cpuinfo);
 
-    std::cout << "IBRS and IBPB supported  : " << ((cpuinfo.reg.edx & (1 << 26)) ? "yes" : "no") << std::endl;
+    //<Ali Jahan>
+    /*std::cout << "IBRS and IBPB supported  : " << ((cpuinfo.reg.edx & (1 << 26)) ? "yes" : "no") << std::endl;
     std::cout << "STIBP supported          : " << ((cpuinfo.reg.edx & (1 << 27)) ? "yes" : "no") << std::endl;
     std::cout << "Spec arch caps supported : " << ((cpuinfo.reg.edx & (1 << 29)) ? "yes" : "no") << std::endl;
-
+    */
+    //<Ali Jahan>
     return true;
 }
 
@@ -1210,6 +1212,8 @@ bool PCM::discoverSystemTopology()
 
 void PCM::printSystemTopology() const
 {
+    //<Ali Jahan>
+    /*
     if(num_cores == num_online_cores)
     {
       std::cerr << "Number of physical cores: " << (num_cores/threads_per_core) << std::endl;
@@ -1240,6 +1244,8 @@ void PCM::printSystemTopology() const
         std::cerr << "Number of core PMU fixed counters: " << core_fixed_counter_num_max << std::endl;
         std::cerr << "Width of fixed counters: " << core_fixed_counter_width << " bits" << std::endl;
     }
+    */
+    //<Ali Jahan>
 }
 
 bool PCM::initMSR()
@@ -1314,7 +1320,9 @@ bool PCM::detectNominalFrequency()
         }
 
 #ifndef PCM_SILENT
-        std::cerr << "Nominal core frequency: " << nominal_frequency << " Hz" << std::endl;
+        //<Ali Jahan>
+        //std::cerr << "Nominal core frequency: " << nominal_frequency << " Hz" << std::endl;
+        //<Ali Jahan>
 #endif
     }
 
@@ -1343,9 +1351,13 @@ void PCM::initEnergyMonitoring()
         pkgMaximumPower = (int32) (double(extract_bits(package_power_info, 32, 46))*wattsPerPowerUnit);
 
 #ifndef PCM_SILENT
+        //<AliJahan>
+        /*
         std::cerr << "Package thermal spec power: "<< pkgThermalSpecPower << " Watt; ";
         std::cerr << "Package minimum power: "<< pkgMinimumPower << " Watt; ";
         std::cerr << "Package maximum power: "<< pkgMaximumPower << " Watt; " << std::endl;
+        */
+        //<Ali Jahan>
 #endif
 
         int i = 0;
@@ -4485,11 +4497,12 @@ ServerPCICFGUncore::ServerPCICFGUncore(uint32 socket_, const PCM * pcm) :
     {
         initDirect(socket_, pcm);
     }
-
-    std::cerr << "Socket " << socket_ << ": " <<
+    //<Ali Jahan>
+    /*std::cerr << "Socket " << socket_ << ": " <<
         getNumMC() << " memory controllers detected with total number of " << getNumMCChannels() << " channels. " <<
         getNumQPIPorts() << " QPI ports detected." <<
         " " << m2mPMUs.size() << " M2M (mesh to memory) blocks detected." << std::endl;
+    *///<Ali Jahan>
 }
 
 void ServerPCICFGUncore::initRegisterLocations()
@@ -4811,8 +4824,10 @@ void ServerPCICFGUncore::initDirect(uint32 socket_, const PCM * pcm)
 
 #ifdef PCM_NOQPI
     xpiPMUs.clear();
-    std::cerr << getNumMC() <<" memory controllers detected with total number of "<< imcPMUs.size() <<" channels. " <<
-                 m2mPMUs.size() << " M2M (mesh to memory) blocks detected."<< std::endl;
+    //<Ali Jahan>
+    /*std::cerr << getNumMC() <<" memory controllers detected with total number of "<< imcPMUs.size() <<" channels. " <<
+                 m2mPMUs.size() << " M2M (mesh to memory) blocks detected."<< std::endl;*/
+    //<Ali Jahan>
     return;
 #endif
 

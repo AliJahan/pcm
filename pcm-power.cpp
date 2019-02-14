@@ -104,6 +104,9 @@ void print_usage(const string progname)
 {
     cerr << endl << " Usage: " << endl << " " << progname
          << " --help | [delay] [options] [-- external_program [external_program_options]]" << endl;
+    //<Ali Jahan>
+    cerr << " -s                    Adds DRAM and CPU power [defualt = prints separately in form of  #CPU_POWER#DRAM_POWER#]" << endl;
+    //<ALi Jahan>
     cerr << "   <delay>                           => time interval to sample performance counters." << endl;
     cerr << "                                        If not specified, or 0, with external program given" << endl;
     cerr << "                                        will read counters only after external program finishes" << endl;
@@ -144,9 +147,10 @@ int main(int argc, char * argv[])
 {
     set_signal_handlers();
 
-    std::cerr << "\n Processor Counter Monitor " << PCM_VERSION << std::endl;
-    std::cerr << "\n Power Monitoring Utility\n";
-
+    //std::cerr << "\n Processor Counter Monitor " << PCM_VERSION << std::endl;
+    //std::cerr << "\n Power Monitoring Utility\n";
+    //<Ali Jahan>
+    bool separate = false;
     int imc_profile = 0;
     int pcu_profile = 0;
     double delay = -1.0;
@@ -246,6 +250,13 @@ int main(int argc, char * argv[])
                 sysArgv = argv;
                 break;
             }
+            //<Ali Jahan>
+            else if (strncmp(*argv, "-s", 3) == 0)
+            {
+                separate = true;
+                continue;
+            }
+            //<Ali Jahan>
             else
             {
                 // any other options positional that is a floating point number is treated as <delay>,
@@ -292,14 +303,16 @@ int main(int argc, char * argv[])
     std::cout << std::dec << std::endl;
     std::cout.precision(2);
     std::cout << std::fixed;
-    std::cerr << "\nMC counter group: " << imc_profile << std::endl;
-    std::cerr << "PCU counter group: " << pcu_profile << std::endl;
-    if (pcu_profile == 0) {
+    //std::cerr << "\nMC counter group: " << imc_profile << std::endl;
+    //std::cerr << "PCU counter group: " << pcu_profile << std::endl;
+    //<Ali Jahan>
+    /*if (pcu_profile == 0) {
         if (cpu_model == PCM::HASWELLX || cpu_model == PCM::BDX_DE || cpu_model == PCM::SKX)
             std::cerr << "Your processor does not support frequency band statistics" << std::endl;
         else
             std::cerr << "Freq bands [0/1/2]: " << freq_band[0] * 100 << " MHz; " << freq_band[1] * 100 << " MHz; " << freq_band[2] * 100 << " MHz; " << std::endl;
-    }
+    }*/
+    //<Ali Jahan>
     if (sysCmd != NULL)
         std::cerr << "Update every " << delay << " seconds" << std::endl;
 
@@ -311,8 +324,10 @@ int main(int argc, char * argv[])
         m->setBlocked(false);
     }
 
-    if (((delay < 1.0) && (delay > 0.0)) || (delay <= 0.0)) delay = PCM_DELAY_DEFAULT;
-
+    //AliJahan/
+    //if (((delay < 1.0) && (delay > 0.0)) || (delay <= 0.0)) delay = PCM_DELAY_DEFAULT;
+    //delay = 0.02;
+    // /AliJahan
     uint32 i = 0;
 
     for (i = 0; i < m->getNumSockets(); ++i)
@@ -327,7 +342,7 @@ int main(int argc, char * argv[])
 
     while ((ic <= numberOfIterations) || (numberOfIterations == 0))
     {
-        std::cout << "----------------------------------------------------------------------------------------------" << std::endl;
+        //AliJahan std::cout << "----------------------------------------------------------------------------------------------" << std::endl;
 
         if (!csv) cout << std::flush;
         int delay_ms = int(delay * 1000);
@@ -360,11 +375,15 @@ int main(int argc, char * argv[])
         for (i = 0; i < m->getNumSockets(); ++i)
             AfterState[i] = m->getServerUncorePowerState(i);
 
-        std::cout << "Time elapsed: " << AfterTime - BeforeTime << " ms\n";
-        std::cout << "Called sleep function for " << delay_ms << " ms\n";
+        //AliJahanstd::cout << "Time elapsed: " << AfterTime - BeforeTime << " ms\n";
+        //AliJahanstd::cout << "Called sleep function for " << delay_ms << " ms\n";
+        //<AliJahan/>
+        double powC = 0.0;
+        double powM = 0.0;
         for (uint32 socket = 0; socket < m->getNumSockets(); ++socket)
         {
-            for (uint32 port = 0; port < m->getQPILinksPerSocket(); ++port)
+            //AliJahan
+            /*for (uint32 port = 0; port < m->getQPILinksPerSocket(); ++port)
             {
                 std::cout << "S" << socket << "P" << port
                           << "; QPIClocks: " << getQPIClocks(port, BeforeState[socket], AfterState[socket])
@@ -503,9 +522,12 @@ int main(int argc, char * argv[])
                               << "\n";
                 }
                 break;
-            }
-
-            std::cout << "S" << socket
+            }*///AliJahan
+            //<AliJahan/>
+            powC += 1000. * getConsumedJoules(BeforeState[socket], AfterState[socket]) / double(AfterTime - BeforeTime);
+            powM += 1000. * getDRAMConsumedJoules(BeforeState[socket], AfterState[socket]) / double(AfterTime - BeforeTime);
+            //</AliJahan>
+            /* //AliJahan std::cout << "S" << socket
                       << "; Consumed energy units: " << getConsumedEnergy(BeforeState[socket], AfterState[socket])
                       << "; Consumed Joules: " << getConsumedJoules(BeforeState[socket], AfterState[socket])
                       << "; Watts: " << 1000. * getConsumedJoules(BeforeState[socket], AfterState[socket]) / double(AfterTime - BeforeTime)
@@ -516,12 +538,20 @@ int main(int argc, char * argv[])
                       << "; Consumed DRAM Joules: " << getDRAMConsumedJoules(BeforeState[socket], AfterState[socket])
                       << "; DRAM Watts: " << 1000. * getDRAMConsumedJoules(BeforeState[socket], AfterState[socket]) / double(AfterTime - BeforeTime)
                       << "\n";
+            */ //AliJahan
         }
+        //<Ali Jahan>
+        if(!separate){
+            std::cout <<"#"<< powC+powM << "#" <<std::endl;
+        }else{
+            std::cout <<"#"<< powC << "#" << powM << "#" <<std::endl;
+        }
+        //<Ali Jahan>
         std::swap(BeforeState, AfterState);
         std::swap(BeforeTime, AfterTime);
 
         if (m->isBlocked()) {
-            std::cout << "----------------------------------------------------------------------------------------------" << std::endl;
+            //AliJahanstd::cout << "----------------------------------------------------------------------------------------------" << std::endl;
             // in case PCM was blocked after spawning child application: break monitoring loop here
             break;
         }
